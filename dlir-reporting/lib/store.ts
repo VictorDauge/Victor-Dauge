@@ -1,0 +1,34 @@
+// @ts-nocheck
+import { env } from 'cloudflare:workers';
+import { seedConfig, seedTemplates } from '../private/seed';
+import { id, stamp, fail, recordKinds } from './domain';
+export function storage(){if(!env.DB||!env.BUCKET)throw Error('Departmental storage is temporarily unavailable. Please try again.');return {db:env.DB,bucket:env.BUCKET}}
+export const publicMember=m=>({id:m.id,name:m.name,role:m.role,unit:m.unit,active:!!m.active,email:m.email||'',linked:!!m.user_id});
+export function roles(u,allowed){if(u.role!=='admin'&&!allowed.includes(u.role))fail('Your role cannot perform this action.')}
+export function scope(u,unit,consolidation=false){if(u.role==='admin')return;if(consolidation&&u.role==='reporting')return;if(unit!==u.unit||unit==='ALL')fail('This record is outside your organisational unit.')}
+export async function resolveMember(db,identity){
+ if(!identity)throw Object.assign(Error('Sign in to continue.'),{status:401});
+ const email=identity.email.toLowerCase().trim();let m=await db.prepare('SELECT * FROM members WHERE user_id = ?').bind(identity.userId).first();
+ if(!m){m=await db.prepare('SELECT * FROM members WHERE email = ?').bind(email).first();if(m&&m.active){await db.prepare('UPDATE members SET user_id = ? WHERE id = ? AND user_id IS NULL').bind(identity.userId,m.id).run();m=await db.prepare('SELECT * FROM members WHERE id = ?').bind(m.id).first();if(m.user_id!==identity.userId)fail('This account is already linked to another sign-in identity.')}}
+ if(!m){const memberId=id();await db.prepare("INSERT INTO members (id,user_id,email,name,role,unit,active,created_at) SELECT ?,?,?,?,'admin','P3',1,? WHERE NOT EXISTS (SELECT 1 FROM members)").bind(memberId,identity.userId,email,identity.displayName,stamp()).run();m=await db.prepare('SELECT * FROM members WHERE user_id = ?').bind(identity.userId).first();}
+ if(!m||!m.active)throw Object.assign(Error('Your account has not been granted access. Contact the DLIR administrator.'),{status:403});
+ return {...m,role:m.role};
+}
+export async function configAndSeed(db,bucket,u){
+ const existing=await db.prepare("SELECT payload FROM settings WHERE key = 'config'").first();if(existing)return JSON.parse(existing.payload);
+ roles(u,[]);const config=structuredClone(seedConfig);const statements=[];
+ for(const w of config.workplan||[])statements.push(db.prepare('INSERT OR IGNORE INTO records (key,kind,unit,payload,revision,unique_key,created_at) VALUES (?,?,?,?,1,NULL,?)').bind(keyFor('workplan',w),'workplan',w.unit,JSON.stringify(w),stamp()));
+ for(const [kind,base64] of Object.entries(seedTemplates)){const docId='seed_'+kind,blob_key='templates/initial/'+kind+'.docx';await bucket.put(blob_key,Uint8Array.from(atob(base64),c=>c.charCodeAt(0)),{httpMetadata:{contentType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}});const d={id:docId,unit:'P3',name:'Programme 3 '+kind+' template.docx',kind,version:1,effective:'2026-01-01',source:'Supplied Programme 3 format; mapped fields',blob_key,at:'2026-01-01T00:00:00.000Z',extracted:'',size:Math.floor(base64.length*3/4)};statements.push(db.prepare('INSERT OR IGNORE INTO records (key,kind,unit,payload,revision,unique_key,created_at) VALUES (?,?,?,?,1,NULL,?)').bind(keyFor('document',d),'document','P3',JSON.stringify(d),stamp()))}
+ config.workplan=[];statements.push(db.prepare("INSERT OR IGNORE INTO settings (key,payload) VALUES ('config',?)").bind(JSON.stringify(config)));if(statements.length)await db.batch(statements);return config;
+}
+export function keyFor(kind,p){return kind==='workplan'?`${kind}:${p.unit}:${p.year}:${p.id}`:kind==='note'?`${kind}:${p.unit}:${p.year}:${p.quarter}:${p.workplan_id||''}`:kind==='budget'?`${kind}:${p.unit}:${p.year}:${p.quarter}:${p.budget_line}`:`${kind}:${p.id}`}
+export async function allRecords(db,unit=null){const res=unit?await db.prepare('SELECT key,kind,payload,revision FROM records WHERE unit = ? ORDER BY created_at,key').bind(unit).all():await db.prepare('SELECT key,kind,payload,revision FROM records ORDER BY created_at,key').all();const records=Object.fromEntries(recordKinds.map(k=>[k,[]]));for(const row of res.results){if(records[row.kind])records[row.kind].push({...JSON.parse(row.payload),revision:row.revision,_key:row.key})}return records}
+export function recordSQL(db,kind,p,expected=null,uniqueKey=null){const value={...p};delete value._key;delete value.revision;delete value.expected_revision;delete value.case_revision;const key=keyFor(kind,p),payload=JSON.stringify(value);if(expected===null)return db.prepare('INSERT INTO records (key,kind,unit,payload,revision,unique_key,created_at) VALUES (?,?,?,?,1,?,?)').bind(key,kind,p.unit,payload,uniqueKey,stamp());return db.prepare('INSERT INTO records (key,kind,unit,payload,revision,unique_key,created_at) VALUES (?,?,?,?,1,?,?) ON CONFLICT(key) DO UPDATE SET payload=excluded.payload,revision=records.revision+1 WHERE records.revision = ?').bind(key,kind,p.unit,payload,uniqueKey,stamp(),expected)}
+export function auditSQL(db,u,action,record,unit,guard=null){const a={id:id(),unit,actor:u.name,actor_id:u.id,at:stamp(),action,record},key=keyFor('audit',a);if(guard)return db.prepare('INSERT INTO records (key,kind,unit,payload,revision,created_at) SELECT ?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM records WHERE key = ?)').bind(key,'audit',unit,JSON.stringify(a),1,a.at,guard);return recordSQL(db,'audit',a)}
+export async function saveAtomic(db,u,kind,p,{expected=null,uniqueKey=null,caseUpdate=null}={}){
+ let statements;if(caseUpdate){const c={...caseUpdate.record};delete c._key;delete c.revision;const eventKey=keyFor(kind,p),caseKey=keyFor('case',c);const raw={...p};delete raw.case_revision;delete raw.expected_revision;
+ statements=[db.prepare('INSERT INTO records (key,kind,unit,payload,revision,unique_key,created_at) SELECT ?,?,?,?,1,?,? WHERE EXISTS (SELECT 1 FROM records WHERE key = ? AND revision = ?)').bind(eventKey,kind,p.unit,JSON.stringify(raw),uniqueKey,stamp(),caseKey,caseUpdate.expected),db.prepare('UPDATE records SET payload = ?, revision=revision+1 WHERE key = ? AND revision = ? AND EXISTS (SELECT 1 FROM records WHERE key = ?)').bind(JSON.stringify(c),caseKey,caseUpdate.expected,eventKey),auditSQL(db,u,'Append case event',p.id,p.unit,eventKey)];
+ }else statements=[recordSQL(db,kind,p,expected,uniqueKey),auditSQL(db,u,'Save '+kind,p.id||keyFor(kind,p),p.unit,keyFor(kind,p))];
+ const results=await db.batch(statements);if(!results[0].meta.changes)throw Object.assign(Error('This record changed in another session. Refresh before saving again.'),{status:409});
+}
+export function expectRevision(p,old){const wanted=Number(p.expected_revision||0);if(wanted!==(old?.revision||0))throw Object.assign(Error('This record changed in another session. Refresh before saving again.'),{status:409});return wanted}

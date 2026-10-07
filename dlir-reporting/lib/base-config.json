@@ -1,0 +1,219 @@
+{
+  "workplan": [],
+  "kfas": [
+    {
+      "id": 1,
+      "title": "Labour Law Reform & Modernisation"
+    },
+    {
+      "id": 2,
+      "title": "OSH Reform & Labour Inspections"
+    },
+    {
+      "id": 3,
+      "title": "Employment & Decent Work Creation"
+    },
+    {
+      "id": 4,
+      "title": "Skills and Labour Productivity"
+    },
+    {
+      "id": 5,
+      "title": "Labour Market Information"
+    },
+    {
+      "id": 6,
+      "title": "Occupational Mobility"
+    },
+    {
+      "id": 7,
+      "title": "Industrial Relations and Social Dialogue"
+    },
+    {
+      "id": 8,
+      "title": "Institutional Strengthening"
+    }
+  ],
+  "units": [
+    {
+      "id": "P1",
+      "name": "Human Resources and Information, Communication and Technology",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P2",
+      "name": "Finance and Administration",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P3",
+      "name": "Industrial Relations",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P4",
+      "name": "Labour Administration",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P5",
+      "name": "Occupational, Safety, and Health",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P6",
+      "name": "Policy",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P7",
+      "name": "International Labour Affairs",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "P8",
+      "name": "National Employment Service",
+      "kind": "Programme",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S1",
+      "name": "Industrial Conciliation and Arbitration Tribunal and Minimum Wages Board (INAR)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S2",
+      "name": "Independent Fellowship Scheme (IFS)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S3",
+      "name": "National Apprenticeship and Trade Testing Board (NATTB)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S4",
+      "name": "National Training Council (NTC)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S5",
+      "name": "National Tripartite Consultative Council (NTCC)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S6",
+      "name": "Office of Industrial Registrar (OIR)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "S7",
+      "name": "Office of Workers Compensation (OWC)",
+      "kind": "Statutory",
+      "route": "Minister; copy Secretary",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "E1",
+      "name": "Secretary's Executive Staff",
+      "kind": "Executive",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "E2",
+      "name": "Public Relations Media",
+      "kind": "Executive",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "E3",
+      "name": "Principal Legal Officer and staff",
+      "kind": "Executive",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    },
+    {
+      "id": "E4",
+      "name": "GESI Policy and staff",
+      "kind": "Executive",
+      "route": "Secretary; Department consolidation",
+      "source": "User-supplied organisation; verify against approved structure"
+    }
+  ],
+  "categories": [
+    "Advice",
+    "Contract dispute",
+    "Termination / final entitlements",
+    "Forced resignation",
+    "Redundancy / retrenchment",
+    "Stand down",
+    "Suspension / termination",
+    "Lay off",
+    "Re-employment",
+    "Repatriation",
+    "Final entitlements calculation",
+    "Underpaid / unpaid entitlements",
+    "Deceased final entitlements",
+    "Mass redundancy",
+    "Industrial strike action",
+    "Industrial agreement negotiation / review",
+    "Log of claims",
+    "Promotion / demotion",
+    "Resignation / retirement",
+    "Enquiry",
+    "Other"
+  ],
+  "statuses": [
+    "Registered",
+    "Awaiting vetting",
+    "Assigned",
+    "Conciliation",
+    "Compulsory conference",
+    "Referred to tribunal",
+    "Awaiting decision",
+    "Closed"
+  ],
+  "events": [
+    "Registration",
+    "Assignment",
+    "Progress update",
+    "Conciliation meeting",
+    "Compulsory conference completed",
+    "Tribunal referral",
+    "Closed",
+    "Reopened",
+    "EBA review completed",
+    "Awareness session",
+    "Training",
+    "Milestone completed"
+  ]
+}
